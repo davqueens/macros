@@ -139,7 +139,7 @@ var FOODS=[
 var today=new Date().toISOString().split("T")[0];
 document.getElementById("d").textContent=today;
 var LK="ml-"+today, GK="mg2";
-var entries=[], goals=Object.assign({},DG), curTab="log", curSub="staples", edGoals=false, eggs=1, rice="half";
+var entries=[], goals=Object.assign({},DG), curTab="log", curSub="staples", edGoals=false, eggs=1, rice="half", hbeggs=1, chicken=4;
 
 try{var ld=localStorage.getItem(LK);if(ld)entries=JSON.parse(ld);}catch(e){}
 try{var lg=localStorage.getItem(GK);if(lg)goals=JSON.parse(lg);}catch(e){}
@@ -236,6 +236,22 @@ function renderAdd(){
       +'<span class="cnt-num">'+eggs+'</span>'
       +'<button class="cnt-btn" onclick="setEggs('+(eggs+1)+')">+</button>'
       +'<button class="btn btn-or" style="padding:7px 14px" onclick="addEggs()">Add</button>'
+      +'</div></div>'
+      +'<div class="egg-row">'
+      +'<div><div class="egg-name">Hard Boiled Eggs</div><div class="egg-note">78 kcal &middot; 6.3g P each</div></div>'
+      +'<div class="egg-ctrl">'
+      +'<button class="cnt-btn" onclick="setHBEggs('+(Math.max(1,hbeggs-1))+')">&#8722;</button>'
+      +'<span class="cnt-num">'+hbeggs+'</span>'
+      +'<button class="cnt-btn" onclick="setHBEggs('+(hbeggs+1)+')">+</button>'
+      +'<button class="btn btn-or" style="padding:7px 14px" onclick="addHBEggs()">Add</button>'
+      +'</div></div>'
+      +'<div class="egg-row">'
+      +'<div><div class="egg-name">Grilled Chicken</div><div class="egg-note">47 kcal &middot; 8.8g P per oz</div></div>'
+      +'<div class="egg-ctrl">'
+      +'<button class="cnt-btn" onclick="setChicken('+(Math.max(1,chicken-1))+')">&#8722;</button>'
+      +'<span class="cnt-num">'+chicken+'oz</span>'
+      +'<button class="cnt-btn" onclick="setChicken('+(chicken+1)+')">+</button>'
+      +'<button class="btn btn-or" style="padding:7px 14px" onclick="addChicken()">Add</button>'
       +'</div></div>';
     for(var i=0;i<STAPLES.length;i++){
       var s=STAPLES[i];
@@ -293,6 +309,10 @@ function go(t){
 
 function sub(s){curSub=s;renderAdd();}
 function setRice(r){rice=r;renderAdd();}
+function setHBEggs(n){hbeggs=n;renderAdd();}
+function setChicken(n){chicken=n;renderAdd();}
+function addHBEggs(){push({n:"Hard Boiled Eggs"+(hbeggs>1?" x"+hbeggs:""),c:Math.round(78*hbeggs),p:Math.round(6.3*hbeggs*10)/10,k:Math.round(0.6*hbeggs*10)/10,f:Math.round(5.3*hbeggs*10)/10,b:0});}
+function addChicken(){push({n:"Grilled Chicken ("+chicken+"oz)",c:Math.round(47*chicken),p:Math.round(8.8*chicken*10)/10,k:0,f:Math.round(1*chicken*10)/10,b:0});}
 function setEggs(n){eggs=n;renderAdd();}
 
 function push(e){entries.push(e);sl();go("log");}
