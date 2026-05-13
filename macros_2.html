@@ -139,7 +139,7 @@ var FOODS=[
 var today=new Date().toISOString().split("T")[0];
 document.getElementById("d").textContent=today;
 var LK="ml-"+today, GK="mg2";
-var entries=[], goals=Object.assign({},DG), curTab="log", curSub="staples", edGoals=false, eggs=1, rice="half", hbeggs=1, chicken=4;
+var entries=[], goals=Object.assign({},DG), curTab="log", curSub="staples", edGoals=false, eggs=1, rice="half", hbeggs=1, chicken=4, crice="half", coz=6, soy="one";
 
 try{var ld=localStorage.getItem(LK);if(ld)entries=JSON.parse(ld);}catch(e){}
 try{var lg=localStorage.getItem(GK);if(lg)goals=JSON.parse(lg);}catch(e){}
@@ -209,6 +209,12 @@ function bowlTot(){
   var rm=rice==="half"?RICE:{c:200,p:4,k:44,f:0,b:0};
   return{c:BEEF.c+rm.c+CORN.c,p:BEEF.p+rm.p+CORN.p,k:BEEF.k+rm.k+CORN.k,f:BEEF.f,b:CORN.b};
 }
+function cBowlTot(){
+  var rm=crice==="half"?RICE:{c:200,p:4,k:44,f:0,b:0};
+  var chk={c:Math.round(47*coz),p:Math.round(8.8*coz*10)/10,k:0,f:Math.round(1*coz*10)/10,b:0};
+  var sm=soy==="one"?{c:15,p:1,k:2,f:0,b:0}:{c:30,p:2,k:4,f:0,b:0};
+  return{c:chk.c+rm.c+CORN.c+sm.c,p:chk.p+rm.p+CORN.p+sm.p,k:chk.k+rm.k+CORN.k+sm.k,f:chk.f+rm.f+CORN.f+sm.f,b:CORN.b};
+}
 
 function renderAdd(){
   var bt=bowlTot();
@@ -228,6 +234,27 @@ function renderAdd(){
       +'<button class="rbtn'+(rice==="full"?" active":"")+'" onclick="setRice(\'full\')">1 cup</button>'
       +'</div>'
       +'<button class="btn btn-or btn-full" onclick="addBowl()">Add to Log</button>'
+      +'</div>'
+      +'<div class="bowl-wrap">'
+      +'<div class="bowl-top"><div><div class="bowl-name">Chicken Bowl</div><div class="bowl-note">Grilled chicken &middot; 1/4 cup corn</div></div>'
+      +'<div style="text-align:right"><div class="bowl-kcal">'+cBowlTot().c+' kcal</div><div class="bowl-mac">P:'+cBowlTot().p+'g &middot; C:'+cBowlTot().k+'g &middot; F:'+cBowlTot().f+'g</div></div></div>'
+      +'<div class="rlabel">Jasmine Rice</div>'
+      +'<div class="rbtns">'
+      +'<button class="rbtn'+(crice==="half"?" active":"")+'" onclick="setCRice(\'half\')">1/2 cup</button>'
+      +'<button class="rbtn'+(crice==="full"?" active":"")+'" onclick="setCRice(\'full\')">1 cup</button>'
+      +'</div>'
+      +'<div class="rlabel">Chicken Breast</div>'
+      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">'
+      +'<button class="cnt-btn" onclick="setCOz('+(Math.max(1,coz-1))+')">&#8722;</button>'
+      +'<span class="cnt-num">'+coz+'oz</span>'
+      +'<button class="cnt-btn" onclick="setCOz('+(coz+1)+')">+</button>'
+      +'</div>'
+      +'<div class="rlabel">Soy Sauce (Lee Kum Kee)</div>'
+      +'<div class="rbtns">'
+      +'<button class="rbtn'+(soy==="one"?" active":"")+'" onclick="setSoy(\'one\')">1 tbsp</button>'
+      +'<button class="rbtn'+(soy==="two"?" active":"")+'" onclick="setSoy(\'two\')">2 tbsp</button>'
+      +'</div>'
+      +'<button class="btn btn-or btn-full" onclick="addCBowl()">Add to Log</button>'
       +'</div>'
       +'<div class="egg-row">'
       +'<div><div class="egg-name">Scrambled Eggs</div><div class="egg-note">73 kcal &middot; 6.2g P each</div></div>'
@@ -309,8 +336,15 @@ function go(t){
 
 function sub(s){curSub=s;renderAdd();}
 function setRice(r){rice=r;renderAdd();}
+function setCRice(r){crice=r;renderAdd();}
+function setSoy(s){soy=s;renderAdd();}
+function setCOz(n){coz=n;renderAdd();}
 function setHBEggs(n){hbeggs=n;renderAdd();}
 function setChicken(n){chicken=n;renderAdd();}
+function addCBowl(){
+  var t=cBowlTot();
+  push({n:"Chicken Bowl ("+coz+"oz chicken, "+(crice==="half"?"1/2":"1")+" cup rice)",c:t.c,p:t.p,k:t.k,f:t.f,b:t.b});
+}
 function addHBEggs(){push({n:"Hard Boiled Eggs"+(hbeggs>1?" x"+hbeggs:""),c:Math.round(78*hbeggs),p:Math.round(6.3*hbeggs*10)/10,k:Math.round(0.6*hbeggs*10)/10,f:Math.round(5.3*hbeggs*10)/10,b:0});}
 function addChicken(){push({n:"Grilled Chicken ("+chicken+"oz)",c:Math.round(47*chicken),p:Math.round(8.8*chicken*10)/10,k:0,f:Math.round(1*chicken*10)/10,b:0});}
 function setEggs(n){eggs=n;renderAdd();}
