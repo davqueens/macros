@@ -14,6 +14,17 @@ body{background:#020617;color:#f1f5f9;font-family:monospace;min-height:100vh;pad
 .hdr-top{font-size:10px;color:#f97316;letter-spacing:.15em;text-transform:uppercase}
 .hdr-title{font-size:22px;font-weight:800;color:#f1f5f9}
 .hdr-date{font-size:10px;color:#475569;margin-bottom:10px}
+.hist-day{background:#0f172a;border:1px solid #1e293b;border-radius:10px;margin-bottom:10px;overflow:hidden}
+.hist-hdr{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;cursor:pointer}
+.hist-date{font-size:12px;font-weight:700;color:#e2e8f0}
+.hist-cal{font-size:12px;color:#f97316;font-weight:700}
+.hist-macros{display:flex;gap:12px;padding:0 14px 10px;flex-wrap:wrap}
+.hist-macro{font-size:10px;color:#475569}
+.hist-macro span{color:#94a3b8}
+.hist-items{border-top:1px solid #1e293b}
+.hist-item{padding:8px 14px;border-bottom:1px solid #1e293b;font-size:11px;color:#94a3b8;display:flex;justify-content:space-between}
+.hist-item:last-child{border-bottom:none}
+.hist-empty{text-align:center;color:#334155;font-size:12px;padding:30px 0}
 .tabs{display:flex;border-top:1px solid #1e293b}
 .tab{background:none;border:none;border-bottom:2px solid transparent;color:#475569;font-family:monospace;font-size:11px;font-weight:700;padding:9px 14px;cursor:pointer;text-transform:uppercase;letter-spacing:.08em}
 .tab.active{color:#f97316;border-bottom-color:#f97316}
@@ -97,49 +108,51 @@ body{background:#020617;color:#f1f5f9;font-family:monospace;min-height:100vh;pad
     <button class="tab active" id="t-log" onclick="go('log')">Today</button>
     <button class="tab" id="t-add" onclick="go('add')">+ Add</button>
     <button class="tab" id="t-goals" onclick="go('goals')">Goals</button>
+    <button class="tab" id="t-history" onclick="go('history')">History</button>
   </div>
 </div>
 <div class="wrap">
   <div id="p-log"></div>
   <div id="p-add" style="display:none"></div>
   <div id="p-goals" style="display:none"></div>
+  <div id="p-history" style="display:none"></div>
 </div>
 
 <script>
-var COLORS={calories:"#f97316",protein:"#3b82f6",carbs:"#a855f7",fat:"#eab308",fiber:"#22c55e"};
-var UNITS={calories:"kcal",protein:"g",carbs:"g",fat:"g",fiber:"g"};
-var DG={calories:2400,protein:215,carbs:185,fat:70,fiber:38};
-var BEEF={c:350,p:49,k:0,f:16,b:0};
-var RICE={c:100,p:2,k:22,f:0,b:0};
-var CORN={c:35,p:1,k:8,f:0,b:1};
+var COLORS={calories:"#f97316",protein:"#3b82f6",carbs:"#a855f7",fat:"#eab308",fiber:"#22c55e",sodium:"#ec4899"};
+var UNITS={calories:"kcal",protein:"g",carbs:"g",fat:"g",fiber:"g",sodium:"mg"};
+var DG={calories:2400,protein:215,carbs:185,fat:70,fiber:38,sodium:2300};
+var BEEF={c:350,p:49,k:0,f:16,b:0,s:150};
+var RICE={c:100,p:2,k:22,f:0,b:0,s:0};
+var CORN={c:35,p:1,k:8,f:0,b:1,s:0};
 var STAPLES=[
-  {n:"Protein Shake (Kirkland whey + collagen)",c:185,p:36,k:8,f:3,b:1},
-  {n:"Coffee w/ Collagen (1 tbsp)",c:35,p:9,k:0,f:0,b:0},
-  {n:"ONE Reese's Protein Bar",c:240,p:18,k:25,f:11,b:3},
-  {n:"Kirkland Fiber Supplement (1 tbsp)",c:20,p:0,k:6,f:0,b:5},
-  {n:"Kirkland Chocolate Brownie Protein Bar",c:190,p:21,k:22,f:6,b:10},
-  {n:"Liquid IV Strawberry (1 packet)",c:45,p:0,k:11,f:0,b:0},
-  {n:"Yogurt Bowl (1c Greek yogurt, 1/2c blueberries, 1/4c granola)",c:292,p:26,k:39,f:4,b:4}
+  {n:"Protein Shake (Kirkland whey + collagen)",c:185,p:36,k:8,f:3,b:1,s:200},
+  {n:"Coffee w/ Collagen (1 tbsp)",c:35,p:9,k:0,f:0,b:0,s:20},
+  {n:"ONE Reese's Protein Bar",c:240,p:18,k:25,f:11,b:3,s:160},
+  {n:"Kirkland Fiber Supplement (1 tbsp)",c:20,p:0,k:6,f:0,b:5,s:5},
+  {n:"Kirkland Chocolate Brownie Protein Bar",c:190,p:21,k:22,f:6,b:10,s:150},
+  {n:"Liquid IV Strawberry (1 packet)",c:45,p:0,k:11,f:0,b:0,s:500},
+  {n:"Yogurt Bowl (1c Greek yogurt, 1/2c blueberries, 1/4c granola)",c:292,p:26,k:39,f:4,b:4,s:80}
 ];
 var FOODS=[
-  {n:"Scrambled Eggs (1 large)",c:73,p:6.2,k:0.4,f:5.4,b:0},
-  {n:"Fuji Apple (medium)",c:95,p:0.5,k:25,f:0.3,b:4},
-  {n:"Chicken Breast (100g)",c:165,p:31,k:0,f:3.6,b:0},
-  {n:"Brown Rice (100g cooked)",c:112,p:2.6,k:24,f:0.8,b:1.8},
-  {n:"Greek Yogurt (170g)",c:100,p:17,k:6,f:0.7,b:0},
-  {n:"Oats (100g dry)",c:389,p:17,k:66,f:7,b:11},
-  {n:"Banana (medium)",c:105,p:1.3,k:27,f:0.4,b:3.1},
-  {n:"Almonds (28g)",c:164,p:6,k:6,f:14,b:3.5},
-  {n:"Salmon (100g)",c:208,p:20,k:0,f:13,b:0},
-  {n:"Cottage Cheese (100g)",c:98,p:11,k:3.4,f:4.3,b:0},
-  {n:"Sweet Potato (medium)",c:103,p:2.3,k:24,f:0.1,b:3.8},
-  {n:"Ground Beef 93% lean (100g)",c:152,p:26,k:0,f:5.6,b:0}
+  {n:"Scrambled Eggs (1 large)",c:73,p:6.2,k:0.4,f:5.4,b:0,s:70},
+  {n:"Fuji Apple (medium)",c:95,p:0.5,k:25,f:0.3,b:4,s:2},
+  {n:"Chicken Breast (100g)",c:165,p:31,k:0,f:3.6,b:0,s:74},
+  {n:"Brown Rice (100g cooked)",c:112,p:2.6,k:24,f:0.8,b:1.8,s:1},
+  {n:"Greek Yogurt (170g)",c:100,p:17,k:6,f:0.7,b:0,s:65},
+  {n:"Oats (100g dry)",c:389,p:17,k:66,f:7,b:11,s:2},
+  {n:"Banana (medium)",c:105,p:1.3,k:27,f:0.4,b:3.1,s:1},
+  {n:"Almonds (28g)",c:164,p:6,k:6,f:14,b:3.5,s:0},
+  {n:"Salmon (100g)",c:208,p:20,k:0,f:13,b:0,s:59},
+  {n:"Cottage Cheese (100g)",c:98,p:11,k:3.4,f:4.3,b:0,s:364},
+  {n:"Sweet Potato (medium)",c:103,p:2.3,k:24,f:0.1,b:3.8,s:41},
+  {n:"Ground Beef 93% lean (100g)",c:152,p:26,k:0,f:5.6,b:0,s:75}
 ];
 
 var today=new Date().toISOString().split("T")[0];
 document.getElementById("d").textContent=today;
 var LK="ml-"+today, GK="mg2";
-var entries=[], goals=Object.assign({},DG), curTab="log", curSub="staples", edGoals=false, eggs=1, rice="half", hbeggs=1, chicken=4, crice="half", coz=6, soy="one";
+var entries=[], goals=Object.assign({},DG), curTab="log", curSub="staples", edGoals=false, eggs=1, rice="half", hbeggs=1, chicken=4, crice="half", coz=6, soy="one", expandedDays={};
 
 try{var ld=localStorage.getItem(LK);if(ld)entries=JSON.parse(ld);}catch(e){}
 try{var lg=localStorage.getItem(GK);if(lg)goals=JSON.parse(lg);}catch(e){}
@@ -149,8 +162,8 @@ function sg(){try{localStorage.setItem(GK,JSON.stringify(goals));}catch(e){}}
 
 function tot(){
   return entries.reduce(function(a,e){
-    return{cal:a.cal+(e.c||0),pro:a.pro+(e.p||0),car:a.car+(e.k||0),fat:a.fat+(e.f||0),fib:a.fib+(e.b||0)};
-  },{cal:0,pro:0,car:0,fat:0,fib:0});
+    return{cal:a.cal+(e.c||0),pro:a.pro+(e.p||0),car:a.car+(e.k||0),fat:a.fat+(e.f||0),fib:a.fib+(e.b||0),sod:a.sod+(e.s||0)};
+  },{cal:0,pro:0,car:0,fat:0,fib:0,sod:0});
 }
 
 function ring(val,max,col,size,stroke){
@@ -184,10 +197,11 @@ function renderLog(){
   }
   h+='<div class="cards">'
     +'<div style="grid-column:1/-1">'+card('calories',Math.round(t.cal),goals.calories)+'</div>'
-    +card('protein',Math.round(t.pro),goals.protein)
+    +'<div style="grid-column:1/-1">'+card('protein',Math.round(t.pro),goals.protein)+'</div>'
     +card('carbs',Math.round(t.car),goals.carbs)
     +card('fat',Math.round(t.fat),goals.fat)
     +card('fiber',Math.round(t.fib),goals.fiber)
+    +card('sodium',Math.round(t.sod),goals.sodium)
     +'</div>';
   if(entries.length===0){
     h+='<div class="empty">Nothing logged &mdash; tap + Add to start.</div>';
@@ -196,7 +210,7 @@ function renderLog(){
     for(var i=0;i<entries.length;i++){
       var e=entries[i];
       h+='<div class="log-row"><div style="flex:1;padding-right:8px"><div class="log-name">'+e.n+'</div>'
-        +'<div class="log-sub">P:'+e.p+'g &middot; C:'+e.k+'g &middot; F:'+e.f+'g &middot; Fib:'+e.b+'g</div></div>'
+        +'<div class="log-sub">P:'+e.p+'g &middot; C:'+e.k+'g &middot; F:'+e.f+'g &middot; Fib:'+e.b+'g &middot; Na:'+(e.s||0)+'mg</div></div>'
         +'<div style="display:flex;align-items:center"><span class="log-cal">'+e.c+'</span>'
         +'<button class="rmv" onclick="rmv('+i+')">&#215;</button></div></div>';
     }
@@ -206,14 +220,14 @@ function renderLog(){
 }
 
 function bowlTot(){
-  var rm=rice==="half"?RICE:{c:200,p:4,k:44,f:0,b:0};
-  return{c:BEEF.c+rm.c+CORN.c,p:BEEF.p+rm.p+CORN.p,k:BEEF.k+rm.k+CORN.k,f:BEEF.f,b:CORN.b};
+  var rm=rice==="half"?RICE:{c:200,p:4,k:44,f:0,b:0,s:0};
+  return{c:BEEF.c+rm.c+CORN.c,p:BEEF.p+rm.p+CORN.p,k:BEEF.k+rm.k+CORN.k,f:BEEF.f,b:CORN.b,s:BEEF.s+(rm.s||0)+CORN.s};
 }
 function cBowlTot(){
-  var rm=crice==="half"?RICE:{c:200,p:4,k:44,f:0,b:0};
-  var chk={c:Math.round(47*coz),p:Math.round(8.8*coz*10)/10,k:0,f:Math.round(1*coz*10)/10,b:0};
-  var sm=soy==="one"?{c:15,p:1,k:2,f:0,b:0}:{c:30,p:2,k:4,f:0,b:0};
-  return{c:chk.c+rm.c+CORN.c+sm.c,p:chk.p+rm.p+CORN.p+sm.p,k:chk.k+rm.k+CORN.k+sm.k,f:chk.f+rm.f+CORN.f+sm.f,b:CORN.b};
+  var rm=crice==="half"?RICE:{c:200,p:4,k:44,f:0,b:0,s:0};
+  var chk={c:Math.round(47*coz),p:Math.round(8.8*coz*10)/10,k:0,f:Math.round(1*coz*10)/10,b:0,s:Math.round(74*coz/3)};
+  var sm=soy==="one"?{c:15,p:1,k:2,f:0,b:0,s:1030}:{c:30,p:2,k:4,f:0,b:0,s:2060};
+  return{c:chk.c+rm.c+CORN.c+sm.c,p:chk.p+rm.p+CORN.p+sm.p,k:chk.k+rm.k+CORN.k+sm.k,f:chk.f+rm.f+CORN.f+sm.f,b:CORN.b,s:chk.s+(rm.s||0)+CORN.s+sm.s};
 }
 
 function renderAdd(){
@@ -299,6 +313,7 @@ function renderAdd(){
       +'<input class="inp" id="cn" placeholder="Food name">'
       +'<div class="ig3"><input class="inp" id="cc" type="number" placeholder="Calories"><input class="inp" id="cp" type="number" placeholder="Protein"><input class="inp" id="ck" type="number" placeholder="Carbs"></div>'
       +'<div class="ig2"><input class="inp" id="cf" type="number" placeholder="Fat"><input class="inp" id="cb" type="number" placeholder="Fiber"></div>'
+      +'<input class="inp" id="cs" type="number" placeholder="Sodium (mg)">'
       +'<button class="btn btn-or btn-full" onclick="addCustom()">Add to Log</button>'
       +'</div>';
   }
@@ -306,7 +321,7 @@ function renderAdd(){
 }
 
 function renderGoals(){
-  var keys=["calories","protein","carbs","fat","fiber"];
+  var keys=["calories","protein","carbs","fat","fiber","sodium"];
   var h='<div class="goals-box"><div class="g-title">Daily Goals</div><div class="g-note">260 to 215 cut &middot; heavy lifting 6x/week</div>';
   for(var i=0;i<keys.length;i++){
     var k=keys[i];
@@ -323,11 +338,53 @@ function renderGoals(){
   document.getElementById("p-goals").innerHTML=h;
 }
 
-function render(){renderLog();renderAdd();renderGoals();}
+function renderHistory(){
+  var days=[];
+  for(var i=1;i<=7;i++){
+    var d=new Date();d.setDate(d.getDate()-i);
+    var dk=d.toISOString().split("T")[0];
+    try{var raw=localStorage.getItem("ml-"+dk);if(raw){var items=JSON.parse(raw);if(items.length>0)days.push({date:dk,items:items});}}catch(e){}
+  }
+  var h='';
+  if(days.length===0){
+    h='<div class="hist-empty">No history yet. Check back tomorrow!</div>';
+  } else {
+    for(var j=0;j<days.length;j++){
+      var day=days[j];
+      var t=day.items.reduce(function(a,e){return{c:a.c+(e.c||0),p:a.p+(e.p||0),k:a.k+(e.k||0),f:a.f+(e.f||0),b:a.b+(e.b||0)};},{c:0,p:0,k:0,f:0,b:0});
+      var expanded=expandedDays[day.date];
+      h+='<div class="hist-day">'
+        +'<div class="hist-hdr" onclick="toggleDay(\''+day.date+'\')">'
+        +'<span class="hist-date">'+day.date+'</span>'
+        +'<span class="hist-cal">'+Math.round(t.c)+' kcal &nbsp;'+(expanded?'&#9650;':'&#9660;')+'</span>'
+        +'</div>'
+        +'<div class="hist-macros">'
+        +'<div class="hist-macro">Protein: <span>'+Math.round(t.p)+'g</span></div>'
+        +'<div class="hist-macro">Carbs: <span>'+Math.round(t.k)+'g</span></div>'
+        +'<div class="hist-macro">Fat: <span>'+Math.round(t.f)+'g</span></div>'
+        +'<div class="hist-macro">Fiber: <span>'+Math.round(t.b)+'g</span></div>'
+        +'</div>';
+      if(expanded){
+        h+='<div class="hist-items">';
+        for(var m=0;m<day.items.length;m++){
+          var it=day.items[m];
+          h+='<div class="hist-item"><span>'+it.n+'</span><span style="color:#f97316;flex-shrink:0;margin-left:8px">'+it.c+' kcal</span></div>';
+        }
+        h+='</div>';
+      }
+      h+='</div>';
+    }
+  }
+  document.getElementById("p-history").innerHTML=h;
+}
+
+function toggleDay(d){expandedDays[d]=!expandedDays[d];renderHistory();}
+
+function render(){renderLog();renderAdd();renderGoals();renderHistory();}
 
 function go(t){
   curTab=t;
-  ["log","add","goals"].forEach(function(id){
+  ["log","add","goals","history"].forEach(function(id){
     document.getElementById("t-"+id).className="tab"+(id===t?" active":"");
     document.getElementById("p-"+id).style.display=id===t?"block":"none";
   });
@@ -343,34 +400,34 @@ function setHBEggs(n){hbeggs=n;renderAdd();}
 function setChicken(n){chicken=n;renderAdd();}
 function addCBowl(){
   var t=cBowlTot();
-  push({n:"Chicken Bowl ("+coz+"oz chicken, "+(crice==="half"?"1/2":"1")+" cup rice)",c:t.c,p:t.p,k:t.k,f:t.f,b:t.b});
+  push({n:"Chicken Bowl ("+coz+"oz chicken, "+(crice==="half"?"1/2":"1")+" cup rice)",c:t.c,p:t.p,k:t.k,f:t.f,b:t.b,s:t.s});
 }
-function addHBEggs(){push({n:"Hard Boiled Eggs"+(hbeggs>1?" x"+hbeggs:""),c:Math.round(78*hbeggs),p:Math.round(6.3*hbeggs*10)/10,k:Math.round(0.6*hbeggs*10)/10,f:Math.round(5.3*hbeggs*10)/10,b:0});}
-function addChicken(){push({n:"Grilled Chicken ("+chicken+"oz)",c:Math.round(47*chicken),p:Math.round(8.8*chicken*10)/10,k:0,f:Math.round(1*chicken*10)/10,b:0});}
+function addHBEggs(){push({n:"Hard Boiled Eggs"+(hbeggs>1?" x"+hbeggs:""),c:Math.round(78*hbeggs),p:Math.round(6.3*hbeggs*10)/10,k:Math.round(0.6*hbeggs*10)/10,f:Math.round(5.3*hbeggs*10)/10,b:0,s:Math.round(62*hbeggs)});}
+function addChicken(){push({n:"Grilled Chicken ("+chicken+"oz)",c:Math.round(47*chicken),p:Math.round(8.8*chicken*10)/10,k:0,f:Math.round(1*chicken*10)/10,b:0,s:Math.round(25*chicken)});}
 function setEggs(n){eggs=n;renderAdd();}
 
 function push(e){entries.push(e);sl();go("log");}
 
 function addItem(i,type){
   var s=type==="s"?STAPLES[i]:FOODS[i];
-  push({n:s.n,c:s.c,p:s.p,k:s.k,f:s.f,b:s.b});
+  push({n:s.n,c:s.c,p:s.p,k:s.k,f:s.f,b:s.b,s:s.s||0});
 }
 
 function addBowl(){
-  var rm=rice==="half"?RICE:{c:200,p:4,k:44,f:0,b:0};
-  push({n:"Beef Bowl ("+(rice==="half"?"1/2":"1")+" cup rice)",c:BEEF.c+rm.c+CORN.c,p:BEEF.p+rm.p+CORN.p,k:BEEF.k+rm.k+CORN.k,f:BEEF.f,b:CORN.b});
+  var rm=rice==="half"?RICE:{c:200,p:4,k:44,f:0,b:0,s:0};
+  push({n:"Beef Bowl ("+(rice==="half"?"1/2":"1")+" cup rice)",c:BEEF.c+rm.c+CORN.c,p:BEEF.p+rm.p+CORN.p,k:BEEF.k+rm.k+CORN.k,f:BEEF.f,b:CORN.b,s:BEEF.s+(rm.s||0)+CORN.s});
 }
 
 function addEggs(){
   var fd=FOODS[0];
-  push({n:fd.n+(eggs>1?" x"+eggs:""),c:Math.round(fd.c*eggs),p:Math.round(fd.p*eggs*10)/10,k:Math.round(fd.k*eggs*10)/10,f:Math.round(fd.f*eggs*10)/10,b:Math.round(fd.b*eggs*10)/10});
+  push({n:fd.n+(eggs>1?" x"+eggs:""),c:Math.round(fd.c*eggs),p:Math.round(fd.p*eggs*10)/10,k:Math.round(fd.k*eggs*10)/10,f:Math.round(fd.f*eggs*10)/10,b:Math.round(fd.b*eggs*10)/10,s:Math.round((fd.s||0)*eggs)});
 }
 
 function addCustom(){
   var n=document.getElementById("cn").value;
   var c=+document.getElementById("cc").value;
   if(!n||!c)return;
-  push({n:n,c:c,p:+(document.getElementById("cp").value)||0,k:+(document.getElementById("ck").value)||0,f:+(document.getElementById("cf").value)||0,b:+(document.getElementById("cb").value)||0});
+  push({n:n,c:c,p:+(document.getElementById("cp").value)||0,k:+(document.getElementById("ck").value)||0,f:+(document.getElementById("cf").value)||0,b:+(document.getElementById("cb").value)||0,s:+(document.getElementById("cs").value)||0});
 }
 
 function rmv(i){entries.splice(i,1);sl();render();}
